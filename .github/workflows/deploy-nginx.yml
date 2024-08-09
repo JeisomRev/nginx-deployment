@@ -1,4 +1,4 @@
-name: Deploy Nginx App to Minikube
+name: Deploy Nginx App
 
 on:
   push:
@@ -14,27 +14,24 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Minikube
-      uses: medyagh/setup-minikube@master
+      run: minikube start --driver=docker
 
-    - name: Build Docker image
+    - name: Set kubeconfig for Minikube
       run: |
-        eval $(minikube docker-env)
-        docker build -t my-nginx-app:latest .
+        mkdir -p $HOME/.kube $HOME/.minikube
+        touch $HOME/.kube/config
+        minikube update-context
 
-    - name: Deploy to Minikube
+    - name: Deploy Nginx from Docker Hub
       run: |
-        kubectl apply -f k8s/deployment.yml
-        kubectl apply -f k8s/service.yml
+        kubectl create deployment nginx --image=nginx
+        kubectl expose deployment nginx --port=80 --type=NodePort
 
-    - name: Wait for deployment
-      run: |
-        kubectl wait --for=condition=available --timeout=300s deployment/nginx-deployment
+    - name: Get Pods
+      run: kubectl get pods
 
-    - name: Get service URL
-      run: |
-        minikube service nginx-service --url
+    - name: Get Services
+      run: kubectl get svc
 
-    - name: Verify deployment
-      run: |
-        kubectl get pods
-        kubectl get services
+    - name: Print Minikube service URL
+      run: minikube service nginx --url
