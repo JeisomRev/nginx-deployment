@@ -25,16 +25,19 @@ jobs:
         touch $HOME/.kube/config
         minikube update-context
 
+    - name: Verify Kubernetes context
+      run: kubectl config current-context
+
+    - name: Verify Minikube status
+      run: minikube status
+
     - name: Deploy Nginx from Docker Hub
       run: |
         kubectl create deployment nginx --image=nginx
         kubectl expose deployment nginx --port=80 --type=NodePort
 
-    - name: Get Deployments
-      run: kubectl get deployments
-
-    - name: Get Pods
-      run: kubectl get pods
+    - name: List all resources after deployment
+      run: kubectl get all
 
     - name: Wait for Nginx Pod to be ready (with retries)
       run: |
@@ -50,4 +53,3 @@ jobs:
 
     - name: Print Minikube service URL
       run: minikube service nginx --url --wait=300
-
