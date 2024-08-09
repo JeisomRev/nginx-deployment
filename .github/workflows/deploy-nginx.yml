@@ -37,7 +37,13 @@ jobs:
         kubectl expose deployment nginx --port=80 --type=NodePort
 
     - name: List all resources after deployment
-      run: kubectl get all
+      run: kubectl get all --namespace=default
+
+    - name: Debug Kubernetes Resources
+      run: |
+        kubectl describe deployment nginx || true
+        kubectl describe pods || true
+        kubectl get events --sort-by='.metadata.creationTimestamp' || true
 
     - name: Wait for Nginx Pod to be ready (with retries)
       run: |
