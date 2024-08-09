@@ -27,6 +27,10 @@ jobs:
         kubectl create deployment nginx --image=nginx
         kubectl expose deployment nginx --port=80 --type=NodePort
 
+    - name: Wait for Nginx Pod to be ready
+      run: |
+        kubectl wait --for=condition=ready pod -l app=nginx --timeout=90s
+
     - name: Get Pods
       run: kubectl get pods
 
@@ -34,4 +38,4 @@ jobs:
       run: kubectl get svc
 
     - name: Print Minikube service URL
-      run: minikube service nginx --url
+      run: minikube service nginx --url --wait=300
