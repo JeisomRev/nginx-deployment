@@ -1,0 +1,37 @@
+name: Deploy Nginx App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Minikube
+      run: minikube start --driver=docker
+
+    - name: Set kubeconfig for Minikube
+      run: |
+        mkdir -p $HOME/.kube $HOME/.minikube
+        touch $HOME/.kube/config
+        minikube update-context
+
+    - name: Deploy Nginx from Docker Hub
+      run: |
+        kubectl create deployment nginx --image=nginx
+        kubectl expose deployment nginx --port=80 --type=NodePort
+
+    - name: Get Pods
+      run: kubectl get pods
+
+    - name: Get Services
+      run: kubectl get svc
+
+    - name: Print Minikube service URL
+      run: minikube service nginx --url
