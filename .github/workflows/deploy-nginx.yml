@@ -39,23 +39,29 @@ jobs:
     - name: List all resources after deployment
       run: kubectl get all --namespace=default
 
-    - name: Debug Kubernetes Resources
-      run: |
-        kubectl describe deployment nginx || true
-        kubectl describe pods || true
-        kubectl get events --sort-by='.metadata.creationTimestamp' || true
+    - name: Describe Nginx Deployment
+      run: kubectl describe deployment nginx --namespace=default
+
+    - name: Describe Pods
+      run: kubectl describe pods -l app=nginx --namespace=default
+
+    - name: Get Kubernetes Events
+      run: kubectl get events --sort-by='.metadata.creationTimestamp' --namespace=default
+
+    - name: Minikube Logs
+      run: minikube logs
 
     - name: Wait for Nginx Pod to be ready (with retries)
       run: |
         for i in {1..5}; do
-          kubectl get pods -l app=nginx && break
+          kubectl get pods -l app=nginx --namespace=default && break
           echo "Waiting for Nginx Pod to be ready..."
           sleep 30
         done
-        kubectl wait --for=condition=ready pod -l app=nginx --timeout=180s
+        kubectl wait --for=condition=ready pod -l app=nginx --timeout=180s --namespace=default
 
     - name: Get Services
-      run: kubectl get svc
+      run: kubectl get svc --namespace=default
 
     - name: Print Minikube service URL
       run: minikube service nginx --url --wait=300
