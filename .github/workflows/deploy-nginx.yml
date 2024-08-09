@@ -13,8 +13,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Restart Docker
+      run: sudo systemctl restart docker
+
     - name: Set up Minikube
-      run: minikube start --driver=docker
+      run: minikube start --driver=docker --memory=4096 --cpus=2
 
     - name: Set kubeconfig for Minikube
       run: |
@@ -27,15 +30,24 @@ jobs:
         kubectl create deployment nginx --image=nginx
         kubectl expose deployment nginx --port=80 --type=NodePort
 
-    - name: Wait for Nginx Pod to be ready
-      run: |
-        kubectl wait --for=condition=ready pod -l app=nginx --timeout=90s
+    - name: Get Deployments
+      run: kubectl get deployments
 
     - name: Get Pods
       run: kubectl get pods
+
+    - name: Wait for Nginx Pod to be ready (with retries)
+      run: |
+        for i in {1..5}; do
+          kubectl get pods -l app=nginx && break
+          echo "Waiting for Nginx Pod to be ready..."
+          sleep 30
+        done
+        kubectl wait --for=condition=ready pod -l app=nginx --timeout=180s
 
     - name: Get Services
       run: kubectl get svc
 
     - name: Print Minikube service URL
       run: minikube service nginx --url --wait=300
+
